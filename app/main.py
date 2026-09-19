@@ -1,5 +1,5 @@
 import os
-
+from fastapi.security import HTTPBearer
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -18,6 +18,7 @@ supabase: Client = create_client(
 )
 
 app = FastAPI(title="Auth API")
+security = HTTPBearer()
 
 
 from app.routes.auth_routes import router as auth_router
