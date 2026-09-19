@@ -20,6 +20,11 @@ supabase: Client = create_client(
 app = FastAPI(title="Auth API")
 
 
+from app.routes.auth_routes import router as auth_router
+
+app.include_router(auth_router)
+
+
 @app.get("/")
 def root():
     return {
