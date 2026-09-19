@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from app.auth_dependency import get_current_user
 from app.main import supabase
 
 router = APIRouter(tags=["Protected"])
@@ -12,56 +13,41 @@ def public_info():
 
 
 @router.get("/protected/profile")
-def profile(authorization: str | None = Header(default=None)):
+def profile(current_user=Depends(get_current_user)):
 
-    print("AUTH HEADER:", authorization)
+    user = current_user["user"]
 
-    if not authorization:
-        raise HTTPException(
-            status_code=401,
-            detail="Access token required"
-        )
+    return {
+        "id": user.id,
+        "email": user.email,
+        "created_at": user.created_at
+    }
 
-    # rest of your code...
 
-    # Check Bearer format
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Access token required"
-        )
+@router.get("/protected/dashboard")
+def dashboard(current_user=Depends(get_current_user)):
 
-    token = authorization.split(" ", 1)[1]
+    user = current_user["user"]
 
-    if not token:
-        raise HTTPException(
-            status_code=401,
-            detail="Access token required"
-        )
+    return {
+        "message": "Welcome to the protected dashboard",
+        "user_id": user.id,
+        "email": user.email
+    }
 
-    # Verify token with Supabase
+
+@router.post("/auth/logout", status_code=204)
+def logout(current_user=Depends(get_current_user)):
+
+    token = current_user["token"]
+
     try:
-        response = supabase.auth.get_user(token)
+        supabase.auth.sign_out()
 
-        if response.user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid or expired token"
-            )
-
-        user = response.user
-
-        return {
-            "id": user.id,
-            "email": user.email,
-            "created_at": user.created_at
-        }
-
-    except HTTPException:
-        raise
+        return None
 
     except Exception:
         raise HTTPException(
             status_code=401,
-            detail="Invalid or expired token"
+            detail="Logout failed"
         )
