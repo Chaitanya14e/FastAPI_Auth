@@ -21,9 +21,10 @@ app = FastAPI(title="Auth API")
 
 
 from app.routes.auth_routes import router as auth_router
+from app.routes.protected_routes import router as protected_router
 
 app.include_router(auth_router)
-
+app.include_router(protected_router)
 
 @app.get("/")
 def root():
